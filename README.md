@@ -1,10 +1,8 @@
 # accel-viewer
 
-<<<<<<< HEAD
 FastAPI + Plotly viewer for accelerometer CSV files. 
 =======
 FastAPI-based viewer for accelerometer data with annotation of selected windows.
->>>>>>> 34fe904 (Update README)
 
 ## Install
 
@@ -24,7 +22,6 @@ Run:
 accel-viewer --data-dir /path/to/your/csvs
 ```
 
-<<<<<<< HEAD
 Data: place your CSVs in `data/` . Each file needs a `time` column plus signal columns (e.g., X,Y,Z). 
 =======
 ### pipx (optional, isolated from base Python)
@@ -32,7 +29,6 @@ Data: place your CSVs in `data/` . Each file needs a `time` column plus signal c
 pip install pipx
 pipx install "git+https://github.com/muralyv/accel-viewer.git"
 accel-viewer --data-dir /path/to/your/csvs
->>>>>>> 34fe904 (Update README)
 ```
 
 ### 2) Windows (local desktop)
@@ -102,7 +98,6 @@ accel-viewer
 ```
 - Open http://localhost:8000/
 
-<<<<<<< HEAD
 
 =======
 Environment overrides:
@@ -129,4 +124,3 @@ dataset,start_time,end_time,label
 - Source layout: `src/accel_viewer/` (app + static).
 - CLI: `accel-viewer` runs `uvicorn accel_viewer.app:app`.
 - Static files bundled; data stays external.
->>>>>>> 34fe904 (Update README)
