@@ -1,7 +1,5 @@
 # accel-viewer
 
-FastAPI + Plotly viewer for accelerometer CSV files. 
-=======
 FastAPI-based viewer for accelerometer data with annotation of selected windows.
 
 ## Install
@@ -22,8 +20,8 @@ Run:
 accel-viewer --data-dir /path/to/your/csvs
 ```
 
-Data: place your CSVs in `data/` . Each file needs a `time` column plus signal columns (e.g., X,Y,Z). 
-=======
+Data: place your CSVs in `data/` . Each file needs a `time` column plus signal columns (e.g., X,Y,Z).
+
 ### pipx (optional, isolated from base Python)
 ```bash
 pip install pipx
@@ -98,8 +96,6 @@ accel-viewer
 ```
 - Open http://localhost:8000/
 
-
-=======
 Environment overrides:
 - `DATA_DIR`: where CSV files live (default `./data`)
 - `SIGNALS`: default signals if not specified (space/comma separated)
@@ -113,7 +109,7 @@ Environment overrides:
   - Aggregated: window = bin units (sec/min/hour/day)
 - Aggregate by: None / sec / min / hour / day; Prev/Next steps by that unit.
 - Select a range on the plot (range slider or drag-select); selected start/end show in the annotation panel.
-- Enter annotation label and file name (forced to `.csv`, saved under `data/`), click “Save annotation”.
+- Enter an annotation label and file name (forced to `.csv`, saved under `data/`), click “Save annotation”.
 
 Annotations CSV columns:
 ```
