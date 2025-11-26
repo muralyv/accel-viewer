@@ -1,6 +1,6 @@
 # accel-viewer
 
-FastAPI + Plotly viewer for accelerometer CSV/Parquet files. Streams small windows, supports aggregation, lets you select a range and save annotations to CSV. Packaged with a CLI (`accel-viewer`) for cross-platform use.
+FastAPI + Plotly viewer for accelerometer CSV files. 
 
 ## Install
 ```
@@ -9,7 +9,7 @@ python -m venv .venv
 pip install -e .
 ```
 
-Data: place your CSVs in `data/` (create if missing). Each file needs a `time` column plus signal columns (e.g., X,Y,Z). Optional: preconvert to Parquet for speed:
+Data: place your CSVs in `data/` . Each file needs a `time` column plus signal columns (e.g., X,Y,Z). 
 ```
 python prepare_data.py
 ```
