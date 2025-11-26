@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Accelerometer Window Viewer</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --accent: #2563eb;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 16px 24px;
+      background: linear-gradient(120deg, #eff6ff 0%, #eef2ff 100%);
+      border-bottom: 1px solid #e5e7eb;
+    }
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    main {
+      padding: 18px 24px 32px;
+      display: grid;
+      gap: 16px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+    label {
+      font-size: 13px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    fieldset {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+    fieldset legend {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 6px;
+    }
+    .signals {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 14px;
+    }
+    button {
+      padding: 9px 14px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    button.primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    #plot {
+      width: 100%;
+      height: 520px;
+    }
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .chip {
+      background: #eef2ff;
+      color: #3730a3;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Accelerometer Window Viewer</h1>
+  </header>
+  <main>
+    <div class="panel">
+      <div class="grid">
+        <div>
+          <label for="dataset">Dataset</label>
+          <select id="dataset"></select>
+        </div>
+        <div>
+          <label for="duration">Window</label>
+          <input id="duration" type="number" min="0.1" step="0.1" value="10" />
+        </div>
+        <div>
+          <label for="agg">Aggregate by</label>
+          <select id="agg">
+            <option value="none">None (raw)</option>
+            <option value="s">Second</option>
+            <option value="m">Minute</option>
+            <option value="h">Hour</option>
+            <option value="d">Day</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid" style="margin-top:10px;">
+        <div>
+          <label for="signals">Signals (comma/space separated)</label>
+          <input id="signals" placeholder="e.g. X,Y,Z or roll angle" />
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+          <button id="prev">Prev</button>
+          <button id="next">Next</button>
+          <button id="go" class="primary">Go</button>
+        </div>
+      </div>
+      <div class="status" id="status" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="panel">
+      <div id="plot"></div>
+    </div>
+
+    <div class="panel">
+      <div class="grid" style="margin-top:0;">
+        <div>
+          <label for="label">Annotation label</label>
+          <input id="label" placeholder="e.g. walking, nonwear" />
+        </div>
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:8px;">
+          <div>
+            <label for="annFile">Annotation file name</label>
+            <input id="annFile" placeholder="e.g. annotations.csv" />
+          </div>
+          <div style="display:flex; gap:10px; align-items:flex-end;">
+            <button id="saveAnn">Save annotation (current window)</button>
+            <span id="annStatus" class="status"></span>
+          </div>
+        </div>
+        <div>
+          <div class="status">Selected start: <span id="selStart">–</span> | end: <span id="selEnd">–</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const datasetSelect = document.getElementById('dataset');
+    const durationInput = document.getElementById('duration');
+    const signalsInput = document.getElementById('signals');
+    const aggSelect = document.getElementById('agg');
+    const statusEl = document.getElementById('status');
+    const btnPrev = document.getElementById('prev');
+    const btnNext = document.getElementById('next');
+    const btnGo = document.getElementById('go');
+    const labelInput = document.getElementById('label');
+    const annFileInput = document.getElementById('annFile');
+    const saveAnnBtn = document.getElementById('saveAnn');
+    const annStatus = document.getElementById('annStatus');
+    const selStart = document.getElementById('selStart');
+    const selEnd = document.getElementById('selEnd');
+
+    let datasets = [];
+    let currentStartMs = null;
+    let availableSignals = ['X', 'Y', 'Z', 'pitch'];
+    let currentSampleRate = null;
+    const unitSeconds = { s: 1, m: 60, h: 3600, d: 86400 };
+    let lastWindow = null;
+    let selectedRange = { start: null, end: null };
+
+    const fmtTime = (t) => (t || '').replace(/Z$/, '');
+
+    function formatDisplayTime(value) {
+      if (!value) return '';
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return String(value);
+      return d.toISOString().replace('Z', '');
+    }
+
+    function alignStart(ms, unit) {
+      if (!ms || unit === 'none' || !unitSeconds[unit]) return ms;
+      const binMs = unitSeconds[unit] * 1000;
+      return ms - (ms % binMs);
+    }
+
+    function fmtNoTZ(ms) {
+      return new Date(ms).toISOString().replace('Z', '');
+    }
+
+    function setStatus(msg, extra = '') {
+      statusEl.innerHTML = `<span>${msg}</span>${extra}`;
+    }
+
+    function parseStart(input) {
+      if (!input) return null;
+      if (/^\\d+$/.test(input.trim())) {
+        const v = Number(input.trim());
+        return Number.isFinite(v) ? v : null;
+      }
+      const d = new Date(input.trim());
+      return isNaN(d.getTime()) ? null : d.getTime();
+    }
+
+    async function loadDatasets() {
+      setStatus('Loading datasets...');
+      const res = await fetch('/datasets');
+      const data = await res.json();
+      datasets = data;
+      datasetSelect.innerHTML = data.map(d => `<option value="${d.id}">${d.id}</option>`).join('');
+      const first = data[0];
+      if (first) {
+        availableSignals = first.columns;
+        currentStartMs = parseStart(first.start_time) ?? Date.now();
+        currentSampleRate = first.sample_rate_hz ?? null;
+        signalsInput.value = availableSignals.join(' ');
+      }
+      setStatus(`Loaded ${data.length} datasets.`);
+    }
+
+    function setSelection(start, end) {
+      selectedRange = { start, end };
+      selStart.textContent = start ? String(start).replace(/Z$/, '') : '–';
+      selEnd.textContent = end ? String(end).replace(/Z$/, '') : '–';
+    }
+
+    async function fetchWindow() {
+      const dataset = datasetSelect.value;
+      const duration = Number(durationInput.value) || 10;
+      const signals = signalsInput.value
+        .split(/[,\\s]+/)
+        .map(s => s.trim())
+        .filter(Boolean);
+      const agg = aggSelect.value;
+      const binSize = agg === 'none' ? null : 1;
+      const binUnit = agg === 'none' ? null : agg;
+
+      const parsed = currentStartMs ?? (datasets[0] ? parseStart(datasets[0].start_time) : null) ?? Date.now();
+      currentStartMs = parsed;
+      const alignedStart = alignStart(currentStartMs, agg);
+      currentStartMs = alignedStart;
+
+      const params = new URLSearchParams();
+      params.set('dataset', dataset);
+      params.set('start_epoch_ms', alignedStart);
+      params.set('duration_seconds', duration);
+      signals.forEach(s => params.append('signals', s));
+      if (binSize && binUnit) {
+        params.set('bin_size', binSize);
+        params.set('bin_unit', binUnit);
+        params.set('aggregate', 'mean');
+      }
+
+      setStatus('Fetching window...');
+      btnPrev.disabled = btnNext.disabled = btnGo.disabled = true;
+      try {
+        const res = await fetch('/window?' + params.toString());
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || res.statusText);
+        }
+        const data = await res.json();
+        renderPlot('plot', data);
+        lastWindow = data;
+        setSelection(data.start_time, data.end_time);
+        const fmt = (t) => typeof t === 'string' ? t.replace(/Z$/, '') : t;
+        const chips = [
+          `<span class="chip">Start: ${fmt(data.start_time)}</span>`,
+          `<span class="chip">End: ${fmt(data.end_time)}</span>`,
+          `<span class="chip">Signals: ${data.signals.join(', ')}</span>`,
+        ];
+        if (data.sample_rate_hz) {
+          chips.push(`<span class="chip">${data.sample_rate_hz} Hz</span>`);
+        }
+        // No aggregation chip per request
+        const info = chips.join('');
+        setStatus('Ready.', info);
+        currentStartMs = parseStart(data.start_time);
+      } catch (err) {
+        console.error(err);
+        setStatus('Error: ' + err.message);
+      } finally {
+        btnPrev.disabled = btnNext.disabled = btnGo.disabled = false;
+      }
+    }
+
+    function renderPlot(targetId, data) {
+      const x = data.time;
+      const showMarkers = data.aggregated && x.length <= 2;
+      const traces = data.signals.map(sig => ({
+        x,
+        y: data.series[sig],
+        mode: showMarkers ? 'lines+markers' : 'lines',
+        name: sig
+      }));
+      const layout = {
+        margin: { t: 20, r: 10, b: 50, l: 50 },
+        xaxis: { title: 'time', rangeslider: { visible: true } },
+        yaxis: { title: 'value' },
+        legend: { orientation: 'h' },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        dragmode: 'select',
+      };
+      Plotly.newPlot(targetId, traces, layout, {responsive: true});
+
+      const plotDiv = document.getElementById(targetId);
+      plotDiv.on('plotly_selected', (eventData) => {
+        if (!eventData || !eventData.range || !eventData.range.x) return;
+        setSelection(eventData.range.x[0], eventData.range.x[1]);
+      });
+      const handleRelayout = (eventData) => {
+        const r0 = eventData["xaxis.range[0]"] ?? (Array.isArray(eventData["xaxis.range"]) ? eventData["xaxis.range"][0] : null);
+        const r1 = eventData["xaxis.range[1]"] ?? (Array.isArray(eventData["xaxis.range"]) ? eventData["xaxis.range"][1] : null);
+        if (r0 && r1) {
+          setSelection(r0, r1);
+        }
+      };
+      plotDiv.on('plotly_relayout', handleRelayout);
+      plotDiv.on('plotly_relayouting', handleRelayout);
+    }
+
+    function shiftWindow(sign) {
+      const val = Number(durationInput.value) || 10;
+      const agg = aggSelect.value;
+      let stepMs;
+      if (agg === 'none') {
+        const sr = currentSampleRate || 30;
+        stepMs = (val / sr) * 1000;
+      } else {
+        const unitSec = unitSeconds[agg] || 1;
+        stepMs = val * unitSec * 1000;
+      }
+      const base = alignStart(currentStartMs ?? Date.now(), agg);
+      const target = base + sign * stepMs;
+      const aligned = alignStart(target, agg);
+      // Guard against going before dataset start
+      const meta = datasets.find(d => d.id === datasetSelect.value);
+      const datasetStart = meta ? parseStart(meta.start_time) : null;
+      if (datasetStart !== null && aligned < datasetStart) {
+        currentStartMs = datasetStart;
+      } else {
+        currentStartMs = aligned;
+      }
+      fetchWindow();
+    }
+
+    btnGo.addEventListener('click', fetchWindow);
+    btnNext.addEventListener('click', () => shiftWindow(1));
+    btnPrev.addEventListener('click', () => shiftWindow(-1));
+    saveAnnBtn.addEventListener('click', async () => {
+      const start = selectedRange.start;
+      const end = selectedRange.end;
+      if (!start || !end) {
+        annStatus.textContent = 'Select a region on the plot first.';
+        return;
+      }
+      annStatus.textContent = 'Saving...';
+      const payload = {
+        dataset: datasetSelect.value,
+        start_time: start,
+        end_time: end,
+        label: labelInput.value || null,
+        file_name: annFileInput.value || null,
+      };
+      try {
+        const res = await fetch('/annotate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || res.statusText);
+        }
+        annStatus.textContent = 'Annotation saved.';
+      } catch (err) {
+        console.error(err);
+        annStatus.textContent = 'Error: ' + err.message;
+      }
+    });
+    aggSelect.addEventListener('change', () => {
+      const v = aggSelect.value;
+      const defaults = { none: 10, s: 10, m: 60, h: 3600, d: 86400 };
+      const target = defaults[v] || 10;
+      if ((Number(durationInput.value) || 0) < target) {
+        durationInput.value = target;
+      }
+      const meta = datasets.find(d => d.id === datasetSelect.value);
+      if (meta) {
+        currentStartMs = parseStart(meta.start_time) ?? Date.now();
+      }
+      fetchWindow();
+    });
+    datasetSelect.addEventListener('change', () => {
+      const meta = datasets.find(d => d.id === datasetSelect.value);
+      if (meta) {
+        availableSignals = meta.columns;
+        currentSampleRate = meta.sample_rate_hz ?? null;
+        currentStartMs = parseStart(meta.start_time) ?? Date.now();
+        aggSelect.value = 'none';
+        durationInput.value = 10;
+        signalsInput.value = availableSignals.join(' ');
+        fetchWindow();
+      }
+    });
+
+    loadDatasets().then(fetchWindow);
+  </script>
+</body>
+</html>

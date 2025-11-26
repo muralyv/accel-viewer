@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+src/accel_viewer/__init__.py
+src/accel_viewer/app.py
+src/accel_viewer/cli.py
+src/accel_viewer.egg-info/PKG-INFO
+src/accel_viewer.egg-info/SOURCES.txt
+src/accel_viewer.egg-info/dependency_links.txt
+src/accel_viewer.egg-info/entry_points.txt
+src/accel_viewer.egg-info/requires.txt
+src/accel_viewer.egg-info/top_level.txt
+src/accel_viewer/static/index.html

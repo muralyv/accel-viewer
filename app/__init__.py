@@ -1,0 +1,1 @@
+"""Accelerometer window API package."""

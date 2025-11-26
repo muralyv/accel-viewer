@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "accel-viewer"
+version = "0.1.0"
+description = "FastAPI windowed accelerometer viewer with annotation support"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pandas",
+    "duckdb",
+    "pydantic",
+]
+
+[project.scripts]
+accel-viewer = "accel_viewer.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+accel_viewer = ["static/*"]

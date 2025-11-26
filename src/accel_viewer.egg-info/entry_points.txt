@@ -1,0 +1,2 @@
+[console_scripts]
+accel-viewer = accel_viewer.cli:main

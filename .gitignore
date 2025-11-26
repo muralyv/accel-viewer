@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Data and annotations
+data/*.csv
+!data/.gitkeep
+annotations*.csv
+
+# Env / editor
+.DS_Store
+*.log
