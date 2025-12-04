@@ -44,12 +44,67 @@
       padding: 14px 16px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.03);
     }
+
+    /* Generic grid (still used if you want) */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 12px;
       align-items: end;
     }
+
+    /* TOP CONTROLS: use flex so fields don't stretch edge-to-edge */
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+    }
+    .field-dataset {
+      flex: 0 0 220px;   /* fixed-ish width */
+    }
+    .field-window {
+      flex: 0 0 110px;
+    }
+    .field-agg {
+      flex: 0 0 150px;
+    }
+    .field-signals {
+      flex: 1 1 260px;   /* takes remaining space */
+    }
+    .controls-row-buttons {
+      flex: 0 0 auto;
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      white-space: nowrap;
+    }
+
+    /* ANNOTATION ROW: label | file | save button */
+    .ann-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    .ann-label {
+      flex: 1 1 260px;
+    }
+    .ann-file {
+      flex: 1 1 260px;
+    }
+    .ann-actions {
+      flex: 0 0 auto;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      white-space: nowrap;
+    }
+
     label {
       font-size: 13px;
       color: var(--muted);
@@ -61,22 +116,6 @@
       padding: 8px 10px;
       border: 1px solid #d1d5db;
       border-radius: 6px;
-      font-size: 14px;
-    }
-    fieldset {
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 8px 10px;
-    }
-    fieldset legend {
-      font-size: 12px;
-      color: var(--muted);
-      padding: 0 6px;
-    }
-    .signals {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
       font-size: 14px;
     }
     button {
@@ -124,17 +163,18 @@
     <h1>Accelerometer Window Viewer</h1>
   </header>
   <main>
+    <!-- TOP CONTROLS -->
     <div class="panel">
-      <div class="grid">
-        <div>
+      <div class="controls-row">
+        <div class="field-group field-dataset">
           <label for="dataset">Dataset</label>
           <select id="dataset"></select>
         </div>
-        <div>
+        <div class="field-group field-window">
           <label for="duration">Window</label>
           <input id="duration" type="number" min="0.1" step="0.1" value="10" />
         </div>
-        <div>
+        <div class="field-group field-agg">
           <label for="agg">Aggregate by</label>
           <select id="agg">
             <option value="none">None (raw)</option>
@@ -144,44 +184,44 @@
             <option value="d">Day</option>
           </select>
         </div>
-      </div>
-      <div class="grid" style="margin-top:10px;">
-        <div>
+        <div class="field-group field-signals">
           <label for="signals">Signals (comma/space separated)</label>
           <input id="signals" placeholder="e.g. X,Y,Z or roll angle" />
         </div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+        <div class="controls-row-buttons">
           <button id="prev">Prev</button>
           <button id="next">Next</button>
           <button id="go" class="primary">Go</button>
         </div>
       </div>
+
+      <!-- VIEW STATUS LINE -->
       <div class="status" id="status" style="margin-top:10px;"></div>
     </div>
 
+    <!-- PLOT PANEL -->
     <div class="panel">
       <div id="plot"></div>
     </div>
 
+    <!-- ANNOTATION PANEL -->
     <div class="panel">
-      <div class="grid" style="margin-top:0;">
-        <div>
+      <div class="ann-row" style="margin-top:0;">
+        <div class="field-group ann-label">
           <label for="label">Annotation label</label>
           <input id="label" placeholder="e.g. walking, nonwear" />
         </div>
-        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:8px;">
-          <div>
-            <label for="annFile">Annotation file name</label>
-            <input id="annFile" placeholder="e.g. annotations.csv" />
-          </div>
-          <div style="display:flex; gap:10px; align-items:flex-end;">
-            <button id="saveAnn">Save annotation (current window)</button>
-            <span id="annStatus" class="status"></span>
-          </div>
+        <div class="field-group ann-file">
+          <label for="annFile">Annotation file name</label>
+          <input id="annFile" placeholder="e.g. annotations.csv" />
         </div>
-        <div>
-          <div class="status">Selected start: <span id="selStart">–</span> | end: <span id="selEnd">–</span></div>
+        <div class="ann-actions">
+          <button id="saveAnn">Save annotation (current window)</button>
+          <span id="annStatus" class="status"></span>
         </div>
+      </div>
+      <div class="status" style="margin-top:6px;">
+        Selected start: <span id="selStart">–</span> | end: <span id="selEnd">–</span>
       </div>
     </div>
   </main>
@@ -235,7 +275,7 @@
 
     function parseStart(input) {
       if (!input) return null;
-      if (/^\\d+$/.test(input.trim())) {
+      if (/^\d+$/.test(input.trim())) {
         const v = Number(input.trim());
         return Number.isFinite(v) ? v : null;
       }
@@ -256,7 +296,7 @@
         currentSampleRate = first.sample_rate_hz ?? null;
         signalsInput.value = availableSignals.join(' ');
       }
-      setStatus(`Loaded ${data.length} datasets.`);
+      setStatus('Loaded datasets.');
     }
 
     function setSelection(start, end) {
@@ -269,7 +309,7 @@
       const dataset = datasetSelect.value;
       const duration = Number(durationInput.value) || 10;
       const signals = signalsInput.value
-        .split(/[,\\s]+/)
+        .split(/[,\s]+/)
         .map(s => s.trim())
         .filter(Boolean);
       const agg = aggSelect.value;
@@ -313,13 +353,12 @@
         if (data.sample_rate_hz) {
           chips.push(`<span class="chip">${data.sample_rate_hz} Hz</span>`);
         }
-        // No aggregation chip per request
         const info = chips.join('');
-        setStatus('Ready.', info);
+        setStatus('View:', info);
         currentStartMs = parseStart(data.start_time);
       } catch (err) {
         console.error(err);
-        setStatus('Error: ' + err.message);
+        setStatus('Error:', `<span>${err.message}</span>`);
       } finally {
         btnPrev.disabled = btnNext.disabled = btnGo.disabled = false;
       }
@@ -375,7 +414,6 @@
       const base = alignStart(currentStartMs ?? Date.now(), agg);
       const target = base + sign * stepMs;
       const aligned = alignStart(target, agg);
-      // Guard against going before dataset start
       const meta = datasets.find(d => d.id === datasetSelect.value);
       const datasetStart = meta ? parseStart(meta.start_time) : null;
       if (datasetStart !== null && aligned < datasetStart) {

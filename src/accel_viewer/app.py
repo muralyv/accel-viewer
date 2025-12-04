@@ -146,7 +146,11 @@ class Dataset:
         median_delta = deltas.median()
         if not median_delta or median_delta <= 0:
             return DEFAULT_SAMPLE_RATE
-        return round(1.0 / median_delta, 3)
+        rate = 1.0 / median_delta
+        # Snap to default if very close (e.g., 30.3 -> 30)
+        if abs(rate - DEFAULT_SAMPLE_RATE) < 0.5:
+            return DEFAULT_SAMPLE_RATE
+        return round(rate, 3)
 
     def _read_start_time(self) -> Optional[str]:
         df = pd.read_csv(self.path, nrows=1)
@@ -294,12 +298,13 @@ class Dataset:
             sr = self.sample_rate_hz or DEFAULT_SAMPLE_RATE
             window_span_seconds = limit_rows / sr
 
+        time_expr = "CAST(time AS TIMESTAMP) AS time"
         try:
             select_cols = ["time"] + select_signals
             query = f"""
-                SELECT {', '.join(select_cols)}
+                SELECT {time_expr}, {', '.join(select_signals)}
                 FROM {source}
-                WHERE time >= ?
+                WHERE CAST(time AS TIMESTAMP) >= ?
                 ORDER BY time
                 LIMIT {limit_rows}
             """

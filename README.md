@@ -14,6 +14,8 @@ Option A: venv
 git clone https://github.com/muralyv/accel-viewer.git
 cd accel-viewer
 
+python --version  # expect Python 3.11.x (use `py --version` on Windows)
+
 python -m venv .venv
 # Windows:
 .\.venv\Scripts\Activate
@@ -36,10 +38,14 @@ pip install -e .
 
 ## Data
 
-Each CSV file needs:
+Input data must be provided as CSV (`.csv`) files.
 
-- a time column (time stamp 2025-10-13 12:30:00)
-- one or more signal columns (for example: X axis)
+Each CSV file must have:
+
+- The **first column** as a `time` column, with timestamps in **one** of the following formats:  
+  - `YYYY-MM-DD HH:MM:SS` (e.g. `2025-10-13 12:30:00`)  
+  - `YYYY-MM-DDTHH:MM:SS.sssZ` (e.g. `2025-10-13T12:30:00.033Z`, ISO 8601 / UTC)
+- One or more signal columns (for example: `X`, `Y`, `Z`) containing numeric values.
 
 ## Run
 
