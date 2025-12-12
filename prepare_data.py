@@ -22,7 +22,7 @@ def csv_to_parquet(csv_path: Path) -> Path:
         f"""
         COPY (
             SELECT *
-            FROM read_csv_auto('{csv_path.as_posix().replace("'", "''")}',
+            FROM read_csv_auto('{csv_path.as_posix().replace("'", "''")}',z
                                timestampformat='%Y-%m-%dT%H:%M:%S%Z')
         ) TO '{parquet_path.as_posix().replace("'", "''")}' (FORMAT PARQUET);
         """

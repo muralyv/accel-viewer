@@ -1,5 +1,9 @@
 # accel-viewer
 
+![Status](https://img.shields.io/badge/status-work%20in%20progress-gray)
+![License](https://img.shields.io/github/license/muralyv/accel-viewer)
+[![Python Tests](https://github.com/muralyv/accel-viewer/actions/workflows/ci.yml/badge.svg)](https://github.com/muralyv/accel-viewer/actions/workflows/ci.yml)
+
 FastAPI-based accelerometer data viewer with annotation of selected windows.  
 It uses DuckDB and FastAPI to provide fast, efficient querying and visualization of large accelerometer datasets.
 
@@ -125,3 +129,4 @@ Annotations CSV columns:
 ```text
 dataset,start_time,end_time,label
 ```
+This tool was developed as part of HEAL-MS (Home-based actigraphy to predict change in neurological function in multiple sclerosis) project. https://msresearch.jhmi.edu/heal-ms/
