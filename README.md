@@ -17,19 +17,21 @@ and click **“Code” → “Download ZIP”** to download the project manually
 
 Clone the repo and install in an isolated environment.
 
-#### Option A: venv
+
 
 ```bash
 git clone https://github.com/muralyv/accel-viewer.git
 cd accel-viewer
-
 python --version  # expect Python 3.11
 
+#### Option A: venv
+
 python -m venv .venv
-# Windows:
-.\.venv\Scripts\Activate
-# macOS / Linux:
-source .venv/bin/activate
+
+.\.venv\Scripts\Activate.ps1 # if you are in powershell
+.\.venv\Scripts\activate.bat # if you are using cmd
+source .venv/bin/activate # # macOS / Linux:
+
 
 pip install -e .
 ```
